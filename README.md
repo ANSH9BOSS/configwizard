@@ -9,9 +9,12 @@ Developed by **ANSH9BOSS**.
 - 🔍 **Diff & Review Modal:** Visual confirmation of exact changes before writing to server files.
 - 📘 **Tooltips & Plain-English Guides:** Easy to understand descriptions for complex YAML and properties files.
 
-## Installation
-Package as a `.blueprint` extension and install via Blueprint CLI:
+## 📦 Direct Installation
+
+Download the `.blueprint` extension directly from [GitHub Releases](https://github.com/ANSH9BOSS/configwizard/releases/tag/v1.0.0) or run in terminal:
+
 ```bash
+wget https://github.com/ANSH9BOSS/configwizard/releases/download/v1.0.0/configwizard.blueprint
 blueprint -install configwizard.blueprint
 ```
 
