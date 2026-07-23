@@ -14,5 +14,7 @@ admin:
 dashboard:
   components: 'resources/scripts/components/ConfigWizard'
 
-routers:
-  client: 'routes/server.php'
+requests:
+  app: 'app'
+  routers:
+    client: 'routes/server.php'

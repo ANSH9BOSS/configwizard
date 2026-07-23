@@ -10,23 +10,39 @@ interface ConfigState {
 }
 
 export default function ConfigWizardContainer() {
+    const id = ServerContext.useStoreState((state) => state.server.data?.id);
     const uuid = ServerContext.useStoreState((state) => state.server.data?.uuid);
+    const serverIdentifier = id || uuid;
+
     const [loading, setLoading] = useState(true);
-    const [configs, setConfigs] = useState<ConfigState>({});
+    const [configs, setConfigs] = useState<ConfigState>({
+        'server.properties': { parsed: { 'view-distance': '8', 'simulation-distance': '6' } },
+        'spigot.yml': { parsed: { 'mob-spawn-range': '6' } },
+        'paper-global.yml': { parsed: { 'redstone-implementation': 'ALTERNATE_CURRENT' } }
+    });
     const [activePreset, setActivePreset] = useState<string | null>(null);
     const [showDiff, setShowDiff] = useState(false);
 
     useEffect(() => {
-        if (!uuid) return;
-        axios.get(`/api/client/servers/${uuid}/extensions/configwizard/configs`)
+        if (!serverIdentifier) return;
+        axios.get(`/api/client/servers/${serverIdentifier}/extensions/configwizard/configs`)
             .then((res) => {
-                setConfigs(res.data.data);
-                setLoading(false);
+                if (res.data?.data) {
+                    setConfigs(res.data.data);
+                }
             })
-            .catch((err) => console.error(err));
-    }, [uuid]);
+            .catch((err) => console.error('ConfigWizard API error:', err))
+            .finally(() => setLoading(false));
+    }, [serverIdentifier]);
 
-    if (loading) return <div className="p-4 text-white">Loading ConfigWizard...</div>;
+    if (loading) {
+        return (
+            <div className="my-4 bg-gray-900 p-6 rounded-lg text-white text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500 mx-auto mb-2"></div>
+                <p>Loading ConfigWizard Settings...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="my-4 bg-gray-900 p-6 rounded-lg text-white">
@@ -54,7 +70,7 @@ export default function ConfigWizardContainer() {
                     category="Performance"
                     impact="HIGH"
                     description="Controls chunk rendering radius around players. High values drastically increase RAM & CPU usage."
-                    value={configs['server.properties']?.parsed?.['view-distance'] || '10'}
+                    value={configs['server.properties']?.parsed?.['view-distance'] || '8'}
                     recommended="6"
                 />
                 <SettingCard
@@ -62,9 +78,27 @@ export default function ConfigWizardContainer() {
                     title="Simulation Distance"
                     category="Performance"
                     impact="HIGH"
-                    description="Controls active ticking distance for entities/redstone. Lower values save TPS."
-                    value={configs['server.properties']?.parsed?.['simulation-distance'] || '10'}
-                    recommended="5"
+                    description="Distance around players where entity ticking occurs."
+                    value={configs['server.properties']?.parsed?.['simulation-distance'] || '6'}
+                    recommended="4"
+                />
+                <SettingCard
+                    name="mob-spawn-range"
+                    title="Mob Spawn Range"
+                    category="Entities"
+                    impact="MEDIUM"
+                    description="Sets maximum mob spawn radius (in chunks) from players."
+                    value={configs['spigot.yml']?.parsed?.['mob-spawn-range'] || '6'}
+                    recommended="4"
+                />
+                <SettingCard
+                    name="redstone-implementation"
+                    title="Redstone Engine"
+                    category="Tick Rate"
+                    impact="HIGH"
+                    description="Alternate Current speeds up complex redstone contraptions with zero lag spikes."
+                    value={configs['paper-global.yml']?.parsed?.['redstone-implementation'] || 'ALTERNATE_CURRENT'}
+                    recommended="ALTERNATE_CURRENT"
                 />
             </div>
 

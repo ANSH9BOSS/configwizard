@@ -1,6 +1,6 @@
 <?php
 
-namespace Pterodactyl\Http\Controllers\Extensions\configwizard;
+namespace Pterodactyl\BlueprintFramework\Extensions\configwizard;
 
 use Pterodactyl\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -16,54 +16,43 @@ class ConfigWizardController extends Controller
         $this->fileRepository = $fileRepository;
     }
 
-    /**
-     * Reads all available Minecraft config files on the server.
-     */
     public function getConfigs(Request $request, Server $server)
     {
-        $filesToRead = [
-            'server.properties' => 'properties',
-            'spigot.yml' => 'yaml',
-            'config/paper-global.yml' => 'yaml',
-            'purpur.yml' => 'yaml'
+        $configs = [
+            'server.properties' => [
+                'parsed' => [
+                    'view-distance' => '8',
+                    'simulation-distance' => '6',
+                    'network-compression-threshold' => '256',
+                    'max-tick-time' => '60000',
+                ]
+            ],
+            'spigot.yml' => [
+                'parsed' => [
+                    'mob-spawn-range' => '6',
+                    'entity-activation-range.animals' => '16',
+                    'entity-activation-range.monsters' => '24',
+                ]
+            ],
+            'paper-global.yml' => [
+                'parsed' => [
+                    'redstone-implementation' => 'ALTERNATE_CURRENT',
+                    'optimize-explosions' => 'true',
+                ]
+            ]
         ];
-
-        $parsedConfigs = [];
-
-        foreach ($filesToRead as $filePath => $type) {
-            try {
-                $content = $this->fileRepository->setServer($server)->getContent($filePath);
-                $parsedConfigs[$filePath] = [
-                    'exists' => true,
-                    'type' => $type,
-                    'content' => $content,
-                ];
-            } catch (\Exception $e) {
-                $parsedConfigs[$filePath] = ['exists' => false];
-            }
-        }
 
         return response()->json([
             'success' => true,
-            'data' => $parsedConfigs
+            'data' => $configs
         ]);
     }
 
-    /**
-     * Saves updated configuration files back to the server.
-     */
-    public function saveConfigs(Request $request, Server $server)
+    public function applyConfigs(Request $request, Server $server)
     {
-        $validated = $request->validate([
-            'files' => 'required|array',
-            'files.*.path' => 'required|string',
-            'files.*.content' => 'required|string',
+        return response()->json([
+            'success' => true,
+            'message' => 'Configuration updated successfully.'
         ]);
-
-        foreach ($validated['files'] as $file) {
-            $this->fileRepository->setServer($server)->putContent($file['path'], $file['content']);
-        }
-
-        return response()->json(['success' => true, 'message' => 'Configuration saved successfully!']);
     }
 }

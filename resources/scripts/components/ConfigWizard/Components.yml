@@ -1,6 +1,4 @@
 Navigation:
-  SubNavigation:
-    AdditionalServerItems: 'AdditionalServerItems'
   Routes:
     - Name: 'ConfigWizard'
       Path: 'configwizard'
