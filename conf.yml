@@ -20,6 +20,3 @@ dashboard:
 
 routers:
   client: 'routes/server.php'
-
-database:
-  migrations: 'database/migrations'
