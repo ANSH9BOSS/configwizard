@@ -8,6 +8,9 @@ info:
   icon: 'icon.png'
   website: 'https://github.com/ANSH9BOSS/configwizard'
 
+admin:
+  view: 'resources/views/admin/configwizard.blade.php'
+
 dashboard:
   components:
     - path: 'resources/scripts/components/ConfigWizard/ConfigWizardContainer.tsx'
