@@ -12,11 +12,7 @@ admin:
   view: 'resources/views/admin/configwizard.blade.php'
 
 dashboard:
-  components:
-    - path: 'resources/scripts/components/ConfigWizard/ConfigWizardContainer.tsx'
-      name: 'ConfigWizard'
-      identifier: 'configwizard'
-      target: 'server/navigation'
+  components: 'resources/scripts/components/ConfigWizard'
 
 routers:
   client: 'routes/server.php'

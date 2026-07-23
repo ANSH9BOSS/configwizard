@@ -1,0 +1,8 @@
+Navigation:
+  SubNavigation:
+    AdditionalServerItems: 'AdditionalServerItems'
+  Routes:
+    - Name: 'ConfigWizard'
+      Path: 'configwizard'
+      Type: 'server'
+      Component: 'ConfigWizardContainer'
