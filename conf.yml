@@ -1,0 +1,22 @@
+info:
+  name: 'ConfigWizard'
+  identifier: 'configwizard'
+  description: 'Intelligent Minecraft server configuration assistant with live presets and performance impact scores.'
+  version: '1.0.0'
+  target: 'beta-2026-06'
+  author: 'ANSH9BOSS'
+  icon: 'icon.png'
+  website: 'https://github.com/ANSH9BOSS/configwizard'
+
+dashboard:
+  components:
+    - path: 'resources/scripts/components/ConfigWizard/ConfigWizardContainer.tsx'
+      name: 'ConfigWizard'
+      identifier: 'configwizard'
+      target: 'server/navigation'
+
+routers:
+  client: 'routes/server.php'
+
+database:
+  migrations: 'database/migrations'
