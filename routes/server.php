@@ -5,3 +5,4 @@ use Pterodactyl\BlueprintFramework\Extensions\configwizard\ConfigWizardControlle
 
 Route::get('/{server}/configs', [ConfigWizardController::class, 'getConfigs']);
 Route::post('/{server}/apply', [ConfigWizardController::class, 'applyConfigs']);
+Route::post('/{server}/action', [ConfigWizardController::class, 'triggerDiagnosticAction']);

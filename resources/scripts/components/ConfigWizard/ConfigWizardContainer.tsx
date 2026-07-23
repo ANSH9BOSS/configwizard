@@ -4,6 +4,8 @@ import { ServerContext } from '@/state/server';
 import SettingCard from './SettingCard';
 import PresetSelector from './PresetSelector';
 import DiffModal from './DiffModal';
+import DiagnosticsTab from './DiagnosticsTab';
+import SecurityShieldTab from './SecurityShieldTab';
 
 interface SettingDef {
     name: string;
@@ -32,6 +34,8 @@ export default function ConfigWizardContainer() {
     const uuid = ServerContext.useStoreState((state) => state.server.data?.uuid);
     const serverIdentifier = id || uuid;
 
+    const [activeTab, setActiveTab] = useState<'optimizer' | 'diagnostics' | 'security'>('optimizer');
+
     const [loading, setLoading] = useState(true);
     const [applying, setApplying] = useState(false);
     const [activePreset, setActivePreset] = useState<string | null>('balanced');
@@ -39,6 +43,7 @@ export default function ConfigWizardContainer() {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [showDiff, setShowDiff] = useState(false);
     const [toastMessage, setToastMessage] = useState<string | null>(null);
+    const [diagnosticsData, setDiagnosticsData] = useState<any>({});
 
     const [settingsState, setSettingsState] = useState<{ [key: string]: string }>({
         'view-distance': '6',
@@ -65,12 +70,8 @@ export default function ConfigWizardContainer() {
                     const spig = res.data.data['spigot.yml']?.parsed || {};
                     const pap = res.data.data['paper-global.yml']?.parsed || {};
 
-                    setSettingsState((prev) => ({
-                        ...prev,
-                        ...sp,
-                        ...spig,
-                        ...pap,
-                    }));
+                    setSettingsState((prev) => ({ ...prev, ...sp, ...spig, ...pap }));
+                    setDiagnosticsData(res.data.data.diagnostics || {});
                 }
             })
             .catch((err) => console.error('ConfigWizard fetch error:', err))
@@ -125,20 +126,18 @@ export default function ConfigWizardContainer() {
             preset: activePreset,
             settings: settingsState,
         })
-            .then((res) => {
+            .then(() => {
                 setShowDiff(false);
                 setToastMessage('✅ Configurations successfully applied to server files!');
                 setTimeout(() => setToastMessage(null), 4000);
             })
-            .catch((err) => {
-                console.error('Apply error:', err);
+            .catch(() => {
                 setToastMessage('❌ Failed to save configuration changes.');
                 setTimeout(() => setToastMessage(null), 4000);
             })
             .finally(() => setApplying(false));
     };
 
-    // Calculate Optimization Score
     let optimalCount = 0;
     SETTINGS_CATALOG.forEach((item) => {
         if (settingsState[item.name] === item.recommended) optimalCount++;
@@ -163,7 +162,6 @@ export default function ConfigWizardContainer() {
 
     return (
         <div className="my-6 space-y-6">
-            {/* Notification Toast */}
             {toastMessage && (
                 <div className="bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 px-4 py-3 rounded-xl text-sm font-semibold flex items-center justify-between shadow-lg animate-bounce">
                     <span>{toastMessage}</span>
@@ -179,21 +177,20 @@ export default function ConfigWizardContainer() {
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <span className="bg-cyan-500/20 text-cyan-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-cyan-500/30">
-                                Native Blueprint Extension
+                                Blueprint Suite v1.0.0
                             </span>
                             <span className="bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                                 20.0 TPS Target
                             </span>
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-                            🧙‍♂️ ConfigWizard
+                            🧙‍♂️ ConfigWizard Suite
                         </h1>
                         <p className="text-xs text-gray-400 mt-1">
-                            Context-aware Minecraft server configuration assistant by <span className="text-cyan-400 font-semibold">ANSH9BOSS</span>
+                            Minecraft Server Optimization & Anti-Exploit Suite by <span className="text-cyan-400 font-semibold">ANSH9BOSS</span>
                         </p>
                     </div>
 
-                    {/* Stats & Optimization Ring */}
                     <div className="flex items-center gap-6 bg-gray-950/80 p-3 px-5 rounded-xl border border-gray-800">
                         <div className="text-center">
                             <div className="text-2xl font-black text-cyan-400 font-mono">{healthScore}%</div>
@@ -210,66 +207,102 @@ export default function ConfigWizardContainer() {
                 </div>
             </div>
 
-            {/* Controls Bar: Presets & Search */}
-            <div className="bg-gray-900/90 border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <PresetSelector 
-                    onSelect={handlePresetSelect}
-                    activePreset={activePreset}
-                />
-
-                <div className="flex items-center gap-3">
-                    <input 
-                        type="text"
-                        placeholder="Search settings..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="bg-gray-950 border border-gray-800 focus:border-cyan-500 rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none w-full md:w-56 transition"
-                    />
-
-                    <button 
-                        onClick={() => setShowDiff(true)}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2 whitespace-nowrap"
-                    >
-                        <span>Review & Save Changes</span>
-                    </button>
-                </div>
+            {/* Navigation Tabs */}
+            <div className="flex border-b border-gray-800 gap-6 text-sm font-bold">
+                <button
+                    onClick={() => setActiveTab('optimizer')}
+                    className={`pb-3 transition relative ${
+                        activeTab === 'optimizer' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    🧙‍♂️ Config Optimizer & Presets
+                </button>
+                <button
+                    onClick={() => setActiveTab('diagnostics')}
+                    className={`pb-3 transition relative ${
+                        activeTab === 'diagnostics' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    📊 Live Diagnostics & TPS
+                </button>
+                <button
+                    onClick={() => setActiveTab('security')}
+                    className={`pb-3 transition relative ${
+                        activeTab === 'security' ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    🛡️ Security & Anti-Exploit
+                </button>
             </div>
 
-            {/* Category Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2">
-                {['ALL', 'PERFORMANCE', 'ENTITIES', 'TICK RATE', 'WORLD', 'NETWORK'].map((cat) => (
-                    <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
-                        className={`text-xs font-bold px-3.5 py-1.5 rounded-lg border transition ${
-                            activeCategory === cat 
-                                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm' 
-                                : 'bg-gray-900/60 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700'
-                        }`}
-                    >
-                        {cat}
-                    </button>
-                ))}
-            </div>
+            {/* TAB 1: OPTIMIZER */}
+            {activeTab === 'optimizer' && (
+                <>
+                    <div className="bg-gray-900/90 border border-gray-800 rounded-2xl p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <PresetSelector onSelect={handlePresetSelect} activePreset={activePreset} />
 
-            {/* Settings Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredSettings.map((setting) => (
-                    <SettingCard
-                        key={setting.name}
-                        name={setting.name}
-                        title={setting.title}
-                        category={setting.category}
-                        impact={setting.impact}
-                        description={setting.description}
-                        value={settingsState[setting.name] || setting.recommended}
-                        recommended={setting.recommended}
-                        onChange={handleSettingChange}
-                    />
-                ))}
-            </div>
+                        <div className="flex items-center gap-3">
+                            <input 
+                                type="text"
+                                placeholder="Search settings..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-gray-950 border border-gray-800 focus:border-cyan-500 rounded-xl px-4 py-2 text-xs text-white placeholder-gray-500 focus:outline-none w-full md:w-56 transition"
+                            />
 
-            {/* Diff Modal */}
+                            <button 
+                                onClick={() => setShowDiff(true)}
+                                className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-cyan-500/20 transition-all whitespace-nowrap"
+                            >
+                                Review & Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        {['ALL', 'PERFORMANCE', 'ENTITIES', 'TICK RATE', 'WORLD', 'NETWORK'].map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`text-xs font-bold px-3.5 py-1.5 rounded-lg border transition ${
+                                    activeCategory === cat 
+                                        ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm' 
+                                        : 'bg-gray-900/60 text-gray-400 border-gray-800 hover:text-white hover:border-gray-700'
+                                }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filteredSettings.map((setting) => (
+                            <SettingCard
+                                key={setting.name}
+                                name={setting.name}
+                                title={setting.title}
+                                category={setting.category}
+                                impact={setting.impact}
+                                description={setting.description}
+                                value={settingsState[setting.name] || setting.recommended}
+                                recommended={setting.recommended}
+                                onChange={handleSettingChange}
+                            />
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* TAB 2: DIAGNOSTICS */}
+            {activeTab === 'diagnostics' && (
+                <DiagnosticsTab serverIdentifier={serverIdentifier || ''} diagnostics={diagnosticsData} />
+            )}
+
+            {/* TAB 3: SECURITY */}
+            {activeTab === 'security' && (
+                <SecurityShieldTab />
+            )}
+
             {showDiff && (
                 <DiffModal 
                     onClose={() => setShowDiff(false)}
