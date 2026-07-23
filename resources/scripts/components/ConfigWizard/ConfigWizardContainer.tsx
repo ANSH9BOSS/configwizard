@@ -24,8 +24,11 @@ export default function ConfigWizardContainer() {
     const [showDiff, setShowDiff] = useState(false);
 
     useEffect(() => {
-        if (!serverIdentifier) return;
-        axios.get(`/api/client/servers/${serverIdentifier}/extensions/configwizard/configs`)
+        if (!serverIdentifier) {
+            setLoading(false);
+            return;
+        }
+        axios.get(`/api/client/extensions/configwizard/${serverIdentifier}/configs`)
             .then((res) => {
                 if (res.data?.data) {
                     setConfigs(res.data.data);
